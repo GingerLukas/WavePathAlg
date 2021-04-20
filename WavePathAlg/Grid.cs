@@ -54,18 +54,25 @@ namespace WavePathAlg
             Queue<Point> path = new Queue<Point>();
             path.Enqueue(start);
 
+            Point result = Point.Empty;
+            Point p;
             int count;
             int dist = 1;
             while ((count = path.Count) > 0)
             {
                 while (count>0)
                 {
-                    Point p = path.Dequeue();
-                    SearchAt(p.X, p.Y + 1, dist, path);
-                    SearchAt(p.X + 1, p.Y, dist, path);
-                    SearchAt(p.X, p.Y - 1, dist, path);
-                    SearchAt(p.X - 1, p.Y, dist, path);
-                    
+                    p = path.Dequeue();
+                    if (SearchAt(p.X, p.Y + 1, dist, path, out result) ||
+                        SearchAt(p.X + 1, p.Y, dist, path, out result) ||
+                        SearchAt(p.X, p.Y - 1, dist, path, out result) ||
+                        SearchAt(p.X - 1, p.Y, dist, path, out result))
+                    {
+                        path.Clear();
+                        break;
+                    }
+
+
                     count--;
                 }
                 this.Invoke(Invalidate);
@@ -73,13 +80,67 @@ namespace WavePathAlg
 
                 dist++;
             }
-            Invalidate();
+
+            GetResultPath(result, delay);
+
         }
 
-        private bool SearchAt(int x, int y, int dist, Queue<Point> queue)    
+        private List<Point> GetResultPath(Point point,int delay)
+        {
+            List<Point> path = new List<Point>();
+            while (true)
+            {
+                Point[] points = new[]
+                {
+                    new Point(point.X + 1, point.Y), new Point(point.X - 1, point.Y), new Point(point.X, point.Y + 1),
+                    new Point(point.X, point.Y - 1)
+                };
+                int min = int.MaxValue;
+                Point step = Point.Empty;
+                for (int i = 0; i < 4; i++)
+                {
+                    int temp = GetValue(points[i]);
+                    if (temp<min)
+                    {
+                        min = temp;
+                        step = points[i];
+                    }
+                }
+
+                if (_blockTypes[step.X,step.Y]==EBlockType.Start)
+                {
+                    break;
+                }
+                else
+                {
+                    _blockTypes[step.X, step.Y] = EBlockType.ReversePath;
+                    this.Invoke(Invalidate);
+                    Thread.Sleep(delay/3);
+
+                }
+
+                path.Add(step);
+                point = step;
+            }
+
+            return path;
+        }
+
+        private int GetValue(Point p)
+        {
+            if (p.X < 0 || p.Y < 0 || p.X >= _blockSize || p.Y >= _blockSize || _blockTypes[p.X,p.Y] == EBlockType.Wall)
+            {
+                return int.MaxValue;
+            }
+
+            return _blockDistances[p.X, p.Y];
+        }
+
+        private bool SearchAt(int x, int y, int dist, Queue<Point> queue, out Point result)    
         {
             if (x < 0 || y < 0 || x >= _blockSize || y >= _blockSize)
             {
+                result  = Point.Empty;
                 return false;
             }
 
@@ -87,6 +148,7 @@ namespace WavePathAlg
             {
                 case EBlockType.Finish:
                     _blockDistances[x, y] = dist;
+                    result = new Point(x, y);
                     return true;
                 case EBlockType.None:
                     _blockTypes[x, y] = EBlockType.Path;
@@ -94,7 +156,7 @@ namespace WavePathAlg
                     _blockDistances[x, y] = dist;
                     break;
             }
-
+            result = Point.Empty;
             return false;
         }
 
@@ -106,6 +168,7 @@ namespace WavePathAlg
         public void ResetPath(bool invalidate = true)
         {
             DeleteType(EBlockType.Path, (i, j) => _blockDistances[i, j] = 0);
+            DeleteType(EBlockType.ReversePath);
             if (invalidate) Invalidate();
         }
 
@@ -202,6 +265,9 @@ namespace WavePathAlg
                         case EBlockType.Wall:
                             color = Color.Black;
                             break;
+                        case EBlockType.ReversePath:
+                            color = Color.DarkBlue;
+                            break;
                     }
 
                     
@@ -282,7 +348,8 @@ namespace WavePathAlg
             Start,
             Finish,
             Wall,
-            Path
+            Path,
+            ReversePath
         }
     }
 }
