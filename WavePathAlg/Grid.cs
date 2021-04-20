@@ -21,6 +21,8 @@ namespace WavePathAlg
 
         private Point _dragPoint;
         private bool _dragEnabled;
+        private bool _paintEnabled;
+        private EBlockType _paintType;
         
         public Point Origin { get; set; }
 
@@ -33,7 +35,6 @@ namespace WavePathAlg
             _panel.Paint += OnPanelPaint;
             _panel.MouseDown += OnMouseDown;
             _panel.MouseMove += OnMouseMove;
-            _panel.MouseLeave += OnMouseLeave;
             _panel.MouseUp += OnMouseUp;
         }
 
@@ -44,12 +45,12 @@ namespace WavePathAlg
             ResetAll();
         }
 
-        public void StartSearch(Point start, Point end, int delay = 100)
+        public void StartSearch(Point start, int delay = 100)
         {
-            ThreadPool.QueueUserWorkItem((state) => Search(start, end, delay));
+            ThreadPool.QueueUserWorkItem((state) => Search(start, delay));
         }
 
-        public void Search(Point start, Point end,int delay)
+        public void Search(Point start,int delay)
         {
             Queue<Point> path = new Queue<Point>();
             path.Enqueue(start);
@@ -81,7 +82,7 @@ namespace WavePathAlg
                 dist++;
             }
 
-            GetResultPath(result, delay);
+            if (result != Point.Empty) GetResultPath(result, delay);
 
         }
 
@@ -128,7 +129,7 @@ namespace WavePathAlg
 
         private int GetValue(Point p)
         {
-            if (p.X < 0 || p.Y < 0 || p.X >= _blockSize || p.Y >= _blockSize || _blockTypes[p.X,p.Y] == EBlockType.Wall)
+            if (p.X < 0 || p.Y < 0 || p.X >= _size || p.Y >= _size || _blockTypes[p.X,p.Y] == EBlockType.Wall || _blockTypes[p.X, p.Y] == EBlockType.None)
             {
                 return int.MaxValue;
             }
@@ -138,7 +139,7 @@ namespace WavePathAlg
 
         private bool SearchAt(int x, int y, int dist, Queue<Point> queue, out Point result)    
         {
-            if (x < 0 || y < 0 || x >= _blockSize || y >= _blockSize)
+            if (x < 0 || y < 0 || x >= _size || y >= _size)
             {
                 result  = Point.Empty;
                 return false;
@@ -208,7 +209,7 @@ namespace WavePathAlg
             base.OnInvalidated(e);
         }
 
-        private Font GetFont(string s,Graphics g,int fSize = 16)
+        private Font GetFont(string s,Graphics g,float fSize = 16,float step = 0.1f)
         {
             if (_lenToFont.TryGetValue(s.Length,out Font r))
             {
@@ -220,9 +221,9 @@ namespace WavePathAlg
             {
                 font = new Font(FontFamily.GenericMonospace, fSize);
                 size = g.MeasureString(s, font);
-                fSize--;
+                fSize-=step;
 
-            } while (size.Width > _blockSize && fSize > 1);
+            } while (size.Width >= _blockSize && fSize > 1);
 
             _lenToFont.Add(s.Length, font);
             return font;
@@ -296,12 +297,7 @@ namespace WavePathAlg
         {
             _dragPoint = Point.Empty;
             _dragEnabled = false;
-        }
-
-        private void OnMouseLeave(object? sender, EventArgs e)
-        {
-            _dragPoint = Point.Empty;
-            _dragEnabled = false;
+            _paintEnabled = false;
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -313,11 +309,40 @@ namespace WavePathAlg
                 Origin += new Size(xDiff, yDiff);
                 _dragPoint = e.Location;
                 Invalidate();
+                return;
+            }
+
+            if (_paintEnabled)
+            {
+                int x = e.Location.X - Origin.X;
+                int y = e.Location.Y - Origin.Y;
+                x /= _blockSize;
+                y /= _blockSize;
+                if (x >= 0 && y >= 0 && x < _size && y < _size)
+                {
+                    switch (_paintType)
+                    {
+                        case EBlockType.Wall:
+                            if (_blockTypes[x, y] == EBlockType.None)
+                            {
+                                _blockTypes[x, y] = _paintType;
+                            }
+                            break;
+                        case EBlockType.None:
+                            if (_blockTypes[x, y] == EBlockType.Wall)
+                            {
+                                _blockTypes[x, y] = _paintType;
+                            }
+                            break;
+                    }
+                    Invalidate();
+                }
             }
         }
 
         private void OnMouseDown(object sender, MouseEventArgs e)
         {
+            
             switch (e.Button)
             {
                 case MouseButtons.Middle:
@@ -325,16 +350,13 @@ namespace WavePathAlg
                     _dragEnabled = true;
                     break;
                 case MouseButtons.Left:
-                    int x = e.Location.X - Origin.X;
-                    int y = e.Location.Y - Origin.Y;
-                    x /= _blockSize;
-                    y /= _blockSize;
-                    if (x >= 0 && y >= 0 && x < _size && y < _size && _blockTypes[x, y] == EBlockType.None)
-                    {
-
-                        _blockTypes[x, y] = EBlockType.Wall;
-                    }
-
+                    _paintEnabled = true;
+                    _paintType = EBlockType.Wall;
+                    
+                    break;
+                case MouseButtons.Right:
+                    _paintEnabled = true;
+                    _paintType = EBlockType.None;
                     break;
             }
             Invalidate();

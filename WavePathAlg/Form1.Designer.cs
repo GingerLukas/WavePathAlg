@@ -31,9 +31,10 @@ namespace WavePathAlg
         {
             this._msMain = new System.Windows.Forms.MenuStrip();
             this._toolResetAll = new System.Windows.Forms.ToolStripMenuItem();
-            this._toolSearch = new System.Windows.Forms.ToolStripMenuItem();
             this._toolResetPath = new System.Windows.Forms.ToolStripMenuItem();
+            this._toolSearch = new System.Windows.Forms.ToolStripMenuItem();
             this._toolResetWalls = new System.Windows.Forms.ToolStripMenuItem();
+            this._lblControls = new System.Windows.Forms.Label();
             this._msMain.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -56,17 +57,17 @@ namespace WavePathAlg
             this._toolResetAll.Size = new System.Drawing.Size(64, 20);
             this._toolResetAll.Text = "Reset All";
             // 
-            // _toolSearch
-            // 
-            this._toolSearch.Name = "_toolSearch";
-            this._toolSearch.Size = new System.Drawing.Size(54, 20);
-            this._toolSearch.Text = "Search";
-            // 
             // _toolResetPath
             // 
             this._toolResetPath.Name = "_toolResetPath";
             this._toolResetPath.Size = new System.Drawing.Size(74, 20);
             this._toolResetPath.Text = "Reset Path";
+            // 
+            // _toolSearch
+            // 
+            this._toolSearch.Name = "_toolSearch";
+            this._toolSearch.Size = new System.Drawing.Size(54, 20);
+            this._toolSearch.Text = "Search";
             // 
             // _toolResetWalls
             // 
@@ -74,15 +75,26 @@ namespace WavePathAlg
             this._toolResetWalls.Size = new System.Drawing.Size(78, 20);
             this._toolResetWalls.Text = "Reset Walls";
             // 
+            // _lblControls
+            // 
+            this._lblControls.AutoSize = true;
+            this._lblControls.Location = new System.Drawing.Point(13, 28);
+            this._lblControls.Name = "_lblControls";
+            this._lblControls.Size = new System.Drawing.Size(153, 45);
+            this._lblControls.TabIndex = 1;
+            this._lblControls.Text = "Middle click - move around\r\nLeft click - place wall\r\nRight click - remove wall";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this._lblControls);
             this.Controls.Add(this._msMain);
             this.MainMenuStrip = this._msMain;
             this.Name = "Form1";
             this.Text = "Form1";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this._msMain.ResumeLayout(false);
             this._msMain.PerformLayout();
             this.ResumeLayout(false);
@@ -97,6 +109,7 @@ namespace WavePathAlg
         private System.Windows.Forms.ToolStripMenuItem _toolSearch;
         private System.Windows.Forms.ToolStripMenuItem _toolResetPath;
         private System.Windows.Forms.ToolStripMenuItem _toolResetWalls;
+        private System.Windows.Forms.Label _lblControls;
     }
 }
 

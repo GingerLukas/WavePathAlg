@@ -12,7 +12,7 @@ namespace WavePathAlg
 {
     public partial class Form1 : Form
     {
-        private Grid _grid = new Grid(16, 16);
+        private Grid _grid = new Grid(32, 16);
         public Form1()
         {
             InitializeComponent();
@@ -28,7 +28,7 @@ namespace WavePathAlg
             this.Controls.Add(_grid);
             _grid.Dock = DockStyle.Fill;
 
-            _grid.Origin = new Point(50, 50);
+            _grid.Origin = new Point(200, 50);
 
             _toolResetAll.Click += ToolResetAllOnClick;
             _toolResetPath.Click += ToolResetPathOnClick;
@@ -43,7 +43,7 @@ namespace WavePathAlg
 
         private void ToolSearchOnClick(object? sender, EventArgs e)
         {
-            _grid.StartSearch(new Point(0, 0), new Point(15, 15));
+            _grid.StartSearch(new Point(0, 0));
         }
 
         private void ToolResetPathOnClick(object? sender, EventArgs e)
